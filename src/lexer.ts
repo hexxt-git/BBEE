@@ -20,7 +20,7 @@ export default function lexer(source: string): Token[] {
     let newNumber = "";
     let newIdentifier = "";
 
-    // adding a trailing whitespace
+    // adding a trailing whitespace so identifiers work at the end
     for (let char of source + " ") {
         // letter, numbers, _ and .
         if (char.match(/\w|\./)) {
@@ -58,7 +58,7 @@ export default function lexer(source: string): Token[] {
                 });
             } else if (char === "*" || char === "/") {
                 token_arr.push({
-                    kind: TokenKind.additive,
+                    kind: TokenKind.multiplicative,
                     value: char,
                 });
             } else if (char === "(") {
