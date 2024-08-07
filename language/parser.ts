@@ -5,8 +5,9 @@ export enum ExpressionKind {
     Identifier,
     UnaryOperation,
     BinaryOperation,
-    Random,
+    Macro,
     TernaryOperation,
+    Block,
 }
 
 export interface NumericLiteralExpression {
@@ -19,8 +20,9 @@ export interface IdentifierExpression {
     identifier: string;
 }
 
-export interface RandomExpression {
-    kind: ExpressionKind.Random;
+export interface MacroExpression {
+    kind: ExpressionKind.Macro;
+    identifier: string;
 }
 
 export interface UnaryExpression {
@@ -44,19 +46,28 @@ export interface TernaryExpression {
     failure: Expression;
 }
 
+export interface BlockExpression {
+    kind: ExpressionKind.Block;
+    operation: string;
+    condition: Expression;
+    content: Expression;
+}
+
 export type Expression =
     | NumericLiteralExpression
     | IdentifierExpression
     | UnaryExpression
     | BinaryExpression
     | TernaryExpression
-    | RandomExpression;
+    | MacroExpression
+    | BlockExpression;
 
 // for binary ops only
 
 export const PRECEDENCE: TokenKind[] = [
     // comma
     // assignment
+    // blocks
     // ternary
     TokenKind.logical,
     TokenKind.comparative,
@@ -67,7 +78,7 @@ export const PRECEDENCE: TokenKind[] = [
     // unary
     // numeric
     // identifiers
-    // random
+    // Macro
     // parentheses
 ];
 
@@ -76,6 +87,7 @@ export class Parser {
     private current = 0;
     private top = () => this.tokens[this.current];
     private pop = () => this.tokens[this.current++];
+    private rem = () => this.tokens.length - this.current + 1;
 
     public parse(source: Token[]): Expression {
         this.tokens = source;
@@ -83,17 +95,17 @@ export class Parser {
     }
 
     public parseToken() {
-        const program: Expression = this.parseAssignmentOperation();
+        const program: Expression = this.parseCommaOperation();
 
         return program;
     }
 
-    private parseAssignmentOperation(): Expression {
-        let left = this.parseCommaOperation();
+    private parseCommaOperation(): Expression {
+        let left = this.parseAssignmentOperation();
 
-        while (this.top() && this.top().kind == TokenKind.assignment) {
+        while (this.top() && this.top().kind == TokenKind.comma) {
             const operator: string = this.pop().value;
-            const right: Expression = this.parseCommaOperation();
+            const right: Expression = this.parseAssignmentOperation();
 
             const expression: BinaryExpression = {
                 kind: ExpressionKind.BinaryOperation,
@@ -107,12 +119,13 @@ export class Parser {
 
         return left;
     }
-    private parseCommaOperation(): Expression {
-        let left = this.parseTernaryOperation();
 
-        while (this.top() && this.top().kind == TokenKind.comma) {
+    private parseAssignmentOperation(): Expression {
+        let left = this.parseBlocks();
+
+        while (this.top() && this.top().kind == TokenKind.assignment) {
             const operator: string = this.pop().value;
-            const right: Expression = this.parseTernaryOperation();
+            const right: Expression = this.parseBlocks();
 
             const expression: BinaryExpression = {
                 kind: ExpressionKind.BinaryOperation,
@@ -125,6 +138,22 @@ export class Parser {
         }
 
         return left;
+    }
+
+    private parseBlocks(): Expression {
+        if (this.top().kind != TokenKind.block) return this.parseTernaryOperation();
+        if (this.rem() < 2) throw new Error("Expected 2 Expressions after for");
+
+        const operation = this.pop().value;
+        const condition = this.parseToken();
+        const content = this.parseToken();
+        const expression: BlockExpression = {
+            kind: ExpressionKind.Block,
+            operation,
+            condition,
+            content,
+        };
+        return expression;
     }
 
     private parseTernaryOperation(): Expression {
@@ -197,7 +226,7 @@ export class Parser {
     }
 
     private parseIdentifier(): Expression {
-        if (this.top().kind !== TokenKind.identifier) return this.parseRandom();
+        if (this.top().kind !== TokenKind.identifier) return this.parseMacro();
         const expression: IdentifierExpression = {
             kind: ExpressionKind.Identifier,
             identifier: this.pop().value,
@@ -205,12 +234,12 @@ export class Parser {
         return expression;
     }
 
-    private parseRandom(): Expression {
-        if (this.top().kind !== TokenKind.random) return this.parsePar();
-        const expression: RandomExpression = {
-            kind: ExpressionKind.Random,
+    private parseMacro(): Expression {
+        if (this.top().kind !== TokenKind.macro) return this.parsePar();
+        const expression: MacroExpression = {
+            kind: ExpressionKind.Macro,
+            identifier: this.pop().value
         };
-        this.pop();
         return expression;
     }
 

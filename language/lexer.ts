@@ -2,7 +2,7 @@ export enum TokenKind {
     identifier,
     numericLiteral,
 
-    random,
+    macro,
 
     unary,
 
@@ -15,6 +15,7 @@ export enum TokenKind {
 
     ternaryOpen,
     ternaryContinue,
+    block,
 
     assignment,
     comma,
@@ -29,8 +30,10 @@ export interface Token {
 }
 
 const RESERVED: Record<string, Token> = {
-    // I'd make it a function loaded in memory or in some stdlib but we don't have function calls and i wanted to make a keyword
-    random: { kind: TokenKind.random, value: "random" },
+    random: { kind: TokenKind.macro, value: "random" },
+    input: { kind: TokenKind.macro, value: "input" },
+    for: { kind: TokenKind.block, value: "for" },
+    if: { kind: TokenKind.block, value: "if" },
 };
 
 export default function tokenize(source: string): Token[] {
@@ -113,6 +116,8 @@ export default function tokenize(source: string): Token[] {
                     break;
                 case ">":
                 case "<":
+                case "~":
+                    // TODO: implement a smarter lexer that can handle symbols like == and <=
                     token_arr.push({
                         kind: TokenKind.comparative,
                         value: char,
@@ -151,12 +156,14 @@ export default function tokenize(source: string): Token[] {
                         value: char,
                     });
                     break;
+                case "{":
                 case "(":
                     token_arr.push({
                         kind: TokenKind.openPar,
                         value: char,
                     });
                     break;
+                case "}":
                 case ")":
                     token_arr.push({
                         kind: TokenKind.closePar,
