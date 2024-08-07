@@ -6,30 +6,35 @@ export enum ExpressionKind {
     BinaryExpression,
 }
 
-export interface Expression {
-    kind: ExpressionKind;
-}
-
-export interface NumericLiteralExpression extends Expression {
+export interface NumericLiteralExpression {
     kind: ExpressionKind.NumericLiteral;
     value: number;
 }
 
-export interface IdentifierExpression extends Expression {
+export interface IdentifierExpression {
     kind: ExpressionKind.Identifier;
     identifier: string;
 }
 
-export interface BinaryExpression extends Expression {
+export interface BinaryExpression {
     kind: ExpressionKind.BinaryExpression;
     left: Expression;
     operator: string;
     right: Expression;
 }
 
-export const PRECEDENCE: TokenKind[] = [TokenKind.additive, TokenKind.multiplicative];
+export type Expression = NumericLiteralExpression | IdentifierExpression | BinaryExpression;
 
-export default class Parser {
+export const PRECEDENCE: TokenKind[] = [
+    TokenKind.additive,
+    TokenKind.multiplicative,
+    TokenKind.modulo,
+    TokenKind.exponentiation,
+    TokenKind.comma,
+    TokenKind.assignment,
+];
+
+export class Parser {
     private tokens: Token[] = [];
     private current = 0;
     private top = () => this.tokens[this.current];
@@ -37,18 +42,18 @@ export default class Parser {
 
     public parse(source: Token[]): Expression {
         this.tokens = source;
-        const program: Expression = this.parseBinaryOperation(0);
+        const program: Expression = this.parseBinaryExpression();
 
         return program;
     }
 
-    private parseBinaryOperation(precedence: number): Expression {
+    private parseBinaryExpression(precedence: number = 0): Expression {
         if (precedence >= PRECEDENCE.length) return this.parseNumericLiteral();
-        let left = this.parseBinaryOperation(precedence + 1);
+        let left = this.parseBinaryExpression(precedence + 1);
 
         while (this.top() && this.top().kind == PRECEDENCE[precedence]) {
             const operator: string = this.pop().value;
-            const right: Expression = this.parseBinaryOperation(precedence + 1);
+            const right: Expression = this.parseBinaryExpression(precedence + 1);
 
             const expression: BinaryExpression = {
                 kind: ExpressionKind.BinaryExpression,
@@ -73,7 +78,7 @@ export default class Parser {
     }
 
     private parseIdentifier(): Expression {
-        if (this.top().kind !== TokenKind.identifier) return this.parseParentheses();
+        if (this.top().kind !== TokenKind.identifier) return this.parsePar();
         const expression: IdentifierExpression = {
             kind: ExpressionKind.Identifier,
             identifier: this.pop().value,
@@ -81,8 +86,23 @@ export default class Parser {
         return expression;
     }
 
-    private parseParentheses(): Expression {
-        // todo implement
-        throw new Error("Unexpected Token Encountered: " + JSON.stringify(this.top));
+    private parsePar(): Expression {
+        if (this.top().kind !== TokenKind.openPar)
+            throw new Error("Unexpected Token Encountered: " + JSON.stringify(this.top));
+        this.pop();
+
+        const expression = this.parseBinaryExpression();
+
+        const closing = this.pop();
+
+        if (closing.kind !== TokenKind.closePar)
+            throw new Error("Expected closing paren token, got: " + JSON.stringify(closing));
+        return expression;
     }
+}
+
+export default function parse(source: Token[]): Expression {
+    const parser = new Parser();
+    const ast = parser.parse(source);
+    return ast;
 }

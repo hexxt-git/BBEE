@@ -4,6 +4,10 @@ export enum TokenKind {
 
     additive,
     multiplicative,
+    modulo,
+    exponentiation,
+    assignment,
+    comma,
 
     openPar,
     closePar,
@@ -14,7 +18,7 @@ export interface Token {
     value: string;
 }
 
-export default function lexer(source: string): Token[] {
+export default function tokenize(source: string): Token[] {
     const token_arr: Token[] = [];
 
     let newNumber = "";
@@ -51,7 +55,9 @@ export default function lexer(source: string): Token[] {
                     value: newIdentifier,
                 });
                 newIdentifier = "";
-            } else if (char === "+" || char === "-") {
+            }
+
+            if (char === "+" || char === "-") {
                 token_arr.push({
                     kind: TokenKind.additive,
                     value: char,
@@ -59,6 +65,26 @@ export default function lexer(source: string): Token[] {
             } else if (char === "*" || char === "/") {
                 token_arr.push({
                     kind: TokenKind.multiplicative,
+                    value: char,
+                });
+            } else if (char === "%") {
+                token_arr.push({
+                    kind: TokenKind.modulo,
+                    value: char,
+                });
+            } else if (char === "^") {
+                token_arr.push({
+                    kind: TokenKind.exponentiation,
+                    value: char,
+                });
+            } else if (char === "=") {
+                token_arr.push({
+                    kind: TokenKind.assignment,
+                    value: char,
+                });
+            } else if (char === "," || char === ";") {
+                token_arr.push({
+                    kind: TokenKind.comma,
                     value: char,
                 });
             } else if (char === "(") {
@@ -71,7 +97,7 @@ export default function lexer(source: string): Token[] {
                     kind: TokenKind.closePar,
                     value: char,
                 });
-            } else if (char != " " && char != "\n") {
+            } else if (char !== " " && char !== "\n" && char !== "\t") {
                 throw new Error("Tokenizer unexpected character: " + char);
             }
         }
