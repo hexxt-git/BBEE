@@ -132,11 +132,11 @@ export class Parser {
 
         while (this.top() && this.top().kind == TokenKind.ternaryOpen) {
             const operator: string = this.pop().value;
-            const success: Expression = this.parseBinaryOperation();
+            const success: Expression = this.parseToken();
             const otherwise: Token = this.pop();
             if (otherwise.kind !== TokenKind.ternaryContinue)
                 throw new Error("expected : after ternary expression");
-            const failure: Expression = this.parseBinaryOperation();
+            const failure: Expression = this.parseToken();
 
             const expression: TernaryExpression = {
                 kind: ExpressionKind.TernaryOperation,
