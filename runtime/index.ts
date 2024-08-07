@@ -1,4 +1,4 @@
-import interpret from "./interpreter";
+import interpret from "../language/interpreter";
 import repl from "./repl";
 import fs from "fs";
 
@@ -10,5 +10,5 @@ if (file) {
 
     console.log(output);
 } else {
-    repl();
+    repl(false);
 }

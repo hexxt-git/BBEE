@@ -1,6 +1,6 @@
 {
   "name": "math-solver",
-  "module": "src/index.ts",
+  "module": "runtime/index.ts",
   "type": "module",
   "devDependencies": {
     "@types/bun": "latest"

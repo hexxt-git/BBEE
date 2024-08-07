@@ -1,9 +1,9 @@
-import interpret from "./interpreter";
-import tokenize from "./lexer";
-import parse from "./parser";
+import interpret from "../language/interpreter";
+import tokenize from "../language/lexer";
+import parse from "../language/parser";
 
 export default function repl(verbose: Boolean = false) {
-    console.log("-+= welcome to my repl (memory not preserved) =+-");
+    console.log("-+= welcome to my repl (memory not preserved between operations) =+-");
 
     while (true) {
         const input = prompt(">");
