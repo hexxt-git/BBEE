@@ -15,9 +15,12 @@ class Interpreter {
             case ExpressionKind.UnaryOperation: {
                 switch (expression.operator) {
                     case "!":
+                    case "not":
                         return this.isTrue(this.interpret(expression.right)) ? 0 : 1;
-                    case "#":
+                    case "floor":
                         return Math.floor(this.interpret(expression.right));
+                    case "round":
+                        return Math.round(this.interpret(expression.right));
                     default:
                         throw new Error("Unknown unary operator: " + expression.operator);
                 }
@@ -44,19 +47,27 @@ class Interpreter {
                         return this.interpret(expression.left) < this.interpret(expression.right)
                             ? 1
                             : 0;
-                    case "~":
+                    case ">=":
+                        return this.interpret(expression.left) >= this.interpret(expression.right)
+                            ? 1
+                            : 0;
+                    case "<=":
+                        return this.interpret(expression.left) <= this.interpret(expression.right)
+                            ? 1
+                            : 0;
+                    case "==":
                         return this.interpret(expression.left) == this.interpret(expression.right)
                             ? 1
                             : 0;
-                    case "&":
+                    case "&&":
                         return this.interpret(expression.left) && this.interpret(expression.right)
                             ? 1
                             : 0;
-                    case "|":
+                    case "||":
                         return this.interpret(expression.left) || this.interpret(expression.right)
                             ? 1
                             : 0;
-                    case "@":
+                    case "^^":
                         return !this.interpret(expression.left) != !this.interpret(expression.right)
                             ? 1
                             : 0;
@@ -113,7 +124,7 @@ class Interpreter {
                     case "random":
                         return Math.random();
                     case "input":
-                        const input = prompt() ?? "";
+                        const input = prompt("input:") ?? "";
                         const float = parseFloat(input);
                         if (isNaN(float)) throw new Error("Input is not a number");
                         return float;

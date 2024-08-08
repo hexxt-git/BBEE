@@ -1,7 +1,6 @@
 export enum TokenKind {
     identifier,
     numericLiteral,
-
     macro,
 
     unary,
@@ -36,147 +35,104 @@ const RESERVED: Record<string, Token> = {
     if: { kind: TokenKind.block, value: "if" },
 };
 
+type TokenRegex = { kind: TokenKind; regex: RegExp };
+
+const TokenMap: Array<TokenRegex> = [
+    {
+        kind: TokenKind.unary,
+        regex: /^((!)|(floor)|(round))/,
+    },
+    {
+        kind: TokenKind.additive,
+        regex: /^[+-]/,
+    },
+    {
+        kind: TokenKind.multiplicative,
+        regex: /^[*/]/,
+    },
+    {
+        kind: TokenKind.modulo,
+        regex: /^%/,
+    },
+    {
+        kind: TokenKind.exponentiation,
+        regex: /^\^/,
+    },
+    {
+        kind: TokenKind.comparative,
+        regex: /^((>=)|(<=)|(==)|>|<)/,
+    },
+    {
+        kind: TokenKind.logical,
+        regex: /^((&&)|(\|\|)|(\^\^))/,
+    },
+    {
+        kind: TokenKind.assignment,
+        regex: /^=/,
+    },
+    {
+        kind: TokenKind.comma,
+        regex: /^[,.]/,
+    },
+    {
+        kind: TokenKind.ternaryOpen,
+        regex: /^\?/,
+    },
+    {
+        kind: TokenKind.ternaryContinue,
+        regex: /^:/,
+    },
+    {
+        kind: TokenKind.openPar,
+        regex: /^[({]/,
+    },
+    {
+        kind: TokenKind.closePar,
+        regex: /^[)}]/,
+    },
+    {
+        kind: TokenKind.numericLiteral,
+        regex: /^[\d.]+/,
+    },
+    {
+        kind: TokenKind.identifier,
+        regex: /^\w+/,
+    },
+];
 export default function tokenize(source: string): Token[] {
-    // adding a trailing whitespace so identifiers work at the end
-    source += " ";
     const token_arr: Token[] = [];
+    let index = 0;
 
-    let newNumber = "";
-    let newIdentifier = "";
+    while (index < source.length) {
+        let match: Token | null = null;
 
-    for (let char of source) {
-        // letter, numbers, _ and .
-        if (char.match(/\w|\./)) {
-            if (newNumber.length > 0) {
-                if (!char.match(/\d|\./)) {
-                    throw new Error("Expected a digit or dot got: " + char);
-                }
-                if (newNumber.includes(".") && char === ".") {
-                    throw new Error("Did not expect more than one dot");
-                }
-                newNumber += char;
-            } else if (newIdentifier.length > 0) {
-                newIdentifier += char;
+        for (let tokenRegex of TokenMap) {
+            const testResult = tokenRegex.regex.test(source.slice(index));
+            if (testResult) {
+                match = {
+                    kind: tokenRegex.kind,
+                    value: source.slice(index).match(tokenRegex.regex)![0],
+                };
+                break;
+            }
+        }
+
+        if (match) {
+            if (match.kind === TokenKind.identifier && RESERVED[match.value]) {
+                token_arr.push(RESERVED[match.value]);
             } else {
-                if (char.match(/\d|\./)) newNumber = char;
-                else newIdentifier = char;
+                token_arr.push(match);
             }
+            index += match.value.length;
         } else {
-            if (newNumber.length > 0) {
-                token_arr.push({
-                    kind: TokenKind.numericLiteral,
-                    value: newNumber,
-                });
-                newNumber = "";
-            } else if (newIdentifier.length > 0) {
-                if (newIdentifier in RESERVED) {
-                    token_arr.push(RESERVED[newIdentifier]);
-                } else {
-                    token_arr.push({
-                        kind: TokenKind.identifier,
-                        value: newIdentifier,
-                    });
-                }
-                newIdentifier = "";
-            }
-
-            switch (char) {
-                case "#":
-                case "!":
-                    token_arr.push({
-                        kind: TokenKind.unary,
-                        value: char,
-                    });
-                    break;
-                case "+":
-                case "-":
-                    token_arr.push({
-                        kind: TokenKind.additive,
-                        value: char,
-                    });
-                    break;
-                case "*":
-                case "/":
-                    token_arr.push({
-                        kind: TokenKind.multiplicative,
-                        value: char,
-                    });
-                    break;
-                case "%":
-                    token_arr.push({
-                        kind: TokenKind.modulo,
-                        value: char,
-                    });
-                    break;
-                case "^":
-                    token_arr.push({
-                        kind: TokenKind.exponentiation,
-                        value: char,
-                    });
-                    break;
-                case ">":
-                case "<":
-                case "~":
-                    // TODO: implement a smarter lexer that can handle symbols like == and <=
-                    token_arr.push({
-                        kind: TokenKind.comparative,
-                        value: char,
-                    });
-                    break;
-                case "|":
-                case "@":
-                case "&":
-                    token_arr.push({
-                        kind: TokenKind.logical,
-                        value: char,
-                    });
-                    break;
-                case "=":
-                    token_arr.push({
-                        kind: TokenKind.assignment,
-                        value: char,
-                    });
-                    break;
-                case ",":
-                case ";":
-                    token_arr.push({
-                        kind: TokenKind.comma,
-                        value: char,
-                    });
-                    break;
-                case "?":
-                    token_arr.push({
-                        kind: TokenKind.ternaryOpen,
-                        value: char,
-                    });
-                    break;
-                case ":":
-                    token_arr.push({
-                        kind: TokenKind.ternaryContinue,
-                        value: char,
-                    });
-                    break;
-                case "{":
-                case "(":
-                    token_arr.push({
-                        kind: TokenKind.openPar,
-                        value: char,
-                    });
-                    break;
-                case "}":
-                case ")":
-                    token_arr.push({
-                        kind: TokenKind.closePar,
-                        value: char,
-                    });
-                    break;
-                case " ":
-                case "\n":
-                case "\t":
-                    break;
-                default:
-                    throw new Error("Tokenizer unexpected character: " + char);
-            }
+            const spaces = source.slice(index).match(/^[ \t\n]+/)?.length ?? 0;
+            index += spaces;
+            if (spaces === 0)
+                throw new Error(
+                    "Unexpected character encountered: " +
+                        source.slice(index, index + 10) +
+                        "..."
+                );
         }
     }
 

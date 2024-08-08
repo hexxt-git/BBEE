@@ -238,7 +238,7 @@ export class Parser {
         if (this.top().kind !== TokenKind.macro) return this.parsePar();
         const expression: MacroExpression = {
             kind: ExpressionKind.Macro,
-            identifier: this.pop().value
+            identifier: this.pop().value,
         };
         return expression;
     }

@@ -1,8 +1,9 @@
 iterations = input,
-temp = 1,
-powerOfTwo = (for (iterations > 0) {
+powerOfTwo = 1
+
+for iterations > 0 {
     iterations = iterations - 1,
-    temp = temp * 2
-}),
+    powerOfTwo = powerOfTwo * 2
+}
 
 powerOfTwo

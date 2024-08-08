@@ -10,5 +10,5 @@ if (file) {
 
     console.log(output);
 } else {
-    repl(false);
+    repl(true);
 }
