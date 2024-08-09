@@ -1,28 +1,45 @@
+import readline from "readline";
 import interpret from "../language/interpreter";
 import tokenize from "../language/lexer";
 import parse from "../language/parser";
 
-export default function repl(verbose: Boolean = false) {
-    console.log("-+= welcome to my repl (memory not preserved between operations) =+-");
+export default function repl(verbose: boolean = false) {
+    console.log("-+= welcome to my repl (history preserved between sessions) =+-");
 
-    while (true) {
-        const input = prompt("> ");
-        if (!input) continue;
-        if (input == "exit") break;
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+        prompt: "> ",
+        historySize: 100,
+    });
+
+    rl.prompt();
+
+    rl.on("line", (input) => {
+        if (!input.trim()) {
+            1;
+            rl.prompt();
+            return;
+        }
+        if (input === "exit") {
+            rl.close();
+            return;
+        }
 
         try {
+            const token_arr = tokenize(input);
+            const ast = parse(token_arr);
             if (verbose) {
-                const token_arr = tokenize(input);
                 console.dir(token_arr, { depth: 10 });
-
-                const ast = parse(token_arr);
                 console.dir(ast, { depth: 10 });
             }
 
-            const output = interpret(input);
+            const output = interpret(ast);
             console.log(output);
         } catch (error) {
             console.error(error);
         }
-    }
+
+        rl.prompt();
+    });
 }

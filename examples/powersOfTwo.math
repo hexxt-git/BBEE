@@ -1,5 +1,5 @@
 iterations = input,
-powerOfTwo = 1
+powerOfTwo = 1,
 
 for iterations > 0 {
     iterations = iterations - 1,

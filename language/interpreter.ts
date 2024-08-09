@@ -13,14 +13,19 @@ class Interpreter {
             case ExpressionKind.NumericLiteral:
                 return expression.value;
             case ExpressionKind.UnaryOperation: {
+                const right = this.interpret(expression.right);
+
                 switch (expression.operator) {
                     case "!":
                     case "not":
-                        return this.isTrue(this.interpret(expression.right)) ? 0 : 1;
+                        return this.isTrue(right) ? 0 : 1;
                     case "floor":
-                        return Math.floor(this.interpret(expression.right));
+                        return Math.floor(right);
                     case "round":
-                        return Math.round(this.interpret(expression.right));
+                        return Math.round(right);
+                    case "output":
+                        console.log(right);
+                        return right;
                     default:
                         throw new Error("Unknown unary operator: " + expression.operator);
                 }
@@ -95,19 +100,15 @@ class Interpreter {
                 switch (expression.operation) {
                     case "for": {
                         let final = 0;
-                        let condition = this.interpret(expression.condition);
-                        while (condition) {
+                        while (this.interpret(expression.condition)) {
                             final = this.interpret(expression.content);
-                            condition = this.interpret(expression.condition);
                         }
                         return final;
                     }
                     case "if": {
                         let final = 0;
-                        let condition = this.interpret(expression.condition);
-                        if (condition) {
+                        if (this.interpret(expression.condition)) {
                             final = this.interpret(expression.content);
-                            condition = this.interpret(expression.condition);
                         }
                         return final;
                     }
@@ -137,9 +138,7 @@ class Interpreter {
     }
 }
 
-export default function interpret(source: string): number {
-    const token_arr = tokenize(source);
-    const ast = parse(token_arr);
+export default function interpret(ast: Expression): number {
     const interpreter = new Interpreter();
 
     const output = interpreter.interpret(ast);

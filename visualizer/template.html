@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>AST Visualization</title>
+        <!-- Include Vis.js via CDN -->
+        <script src="https://unpkg.com/vis-network@latest/dist/vis-network.min.js"></script>
+        <style>
+            body {
+                margin: 0;
+            }
+            #network {
+                width: 100vw;
+                height: 100vh;
+                border: 1px solid lightgray;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="network"></div>
+        <script>
+            {{NODES}}
+            {{EDGES}}
+
+            const container = document.getElementById("network");
+            const data = { nodes, edges };
+            const options = {
+                interaction: { hover: true },
+                layout: {
+                    hierarchical: {
+                        direction: "UD",
+                        sortMethod: "directed",
+                    },
+                },
+                physics: {
+                    hierarchicalRepulsion: {
+                        centralGravity: 0.0,
+                        springLength: 30,
+                        springConstant: 0.008,
+                        nodeDistance: 130,
+                        damping: 0.09,
+                    },
+                }
+            };
+
+            const network = new vis.Network(container, data, options);
+        </script>
+    </body>
+</html>

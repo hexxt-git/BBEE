@@ -69,12 +69,12 @@ export const PRECEDENCE: TokenKind[] = [
     // assignment
     // blocks
     // ternary
-    TokenKind.logical,
-    TokenKind.comparative,
     TokenKind.exponentiation,
     TokenKind.modulo,
     TokenKind.multiplicative,
     TokenKind.additive,
+    TokenKind.comparative,
+    TokenKind.logical,
     // unary
     // numeric
     // identifiers

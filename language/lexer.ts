@@ -40,7 +40,7 @@ type TokenRegex = { kind: TokenKind; regex: RegExp };
 const TokenMap: Array<TokenRegex> = [
     {
         kind: TokenKind.unary,
-        regex: /^((!)|(floor)|(round))/,
+        regex: /^((!)|(floor)|(round)|(output))/,
     },
     {
         kind: TokenKind.additive,

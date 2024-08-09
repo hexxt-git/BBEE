@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>AST Visualization</title>
+        <!-- Include Vis.js via CDN -->
+        <script src="https://unpkg.com/vis-network@latest/dist/vis-network.min.js"></script>
+        <style>
+            body {
+                margin: 0;
+            }
+            #network {
+                width: 100vw;
+                height: 100vh;
+                border: 1px solid lightgray;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="network"></div>
+        <script>
+            const nodes = JSON.parse('[{"id":0,"label":"binary operation ,","shape":"triangle"},{"id":1,"label":"binary operation =","shape":"triangle"},{"id":2,"label":"identifier i","shape":"box"},{"id":3,"label":"numeric literal 0","shape":"ellipse"},{"id":4,"label":"block for","shape":"hexagon"},{"id":5,"label":"binary operation ,","shape":"triangle"},{"id":6,"label":"binary operation =","shape":"triangle"},{"id":7,"label":"identifier i","shape":"box"},{"id":8,"label":"binary operation +","shape":"triangle"},{"id":9,"label":"identifier i","shape":"box"},{"id":10,"label":"numeric literal 1","shape":"ellipse"},{"id":11,"label":"binary operation <","shape":"triangle"},{"id":12,"label":"identifier i","shape":"box"},{"id":13,"label":"numeric literal 30","shape":"ellipse"},{"id":14,"label":"ternary operation ?","shape":"star"},{"id":15,"label":"unary operation !","shape":"diamond"},{"id":16,"label":"binary operation %","shape":"triangle"},{"id":17,"label":"identifier i","shape":"box"},{"id":18,"label":"numeric literal 3","shape":"ellipse"},{"id":19,"label":"unary operation output","shape":"diamond"},{"id":20,"label":"numeric literal 3333","shape":"ellipse"},{"id":21,"label":"binary operation ,","shape":"triangle"},{"id":22,"label":"numeric literal 0","shape":"ellipse"},{"id":23,"label":"ternary operation ?","shape":"star"},{"id":24,"label":"unary operation !","shape":"diamond"},{"id":25,"label":"binary operation %","shape":"triangle"},{"id":26,"label":"identifier i","shape":"box"},{"id":27,"label":"numeric literal 5","shape":"ellipse"},{"id":28,"label":"unary operation output","shape":"diamond"},{"id":29,"label":"numeric literal 5555","shape":"ellipse"},{"id":30,"label":"binary operation ,","shape":"triangle"},{"id":31,"label":"numeric literal 0","shape":"ellipse"},{"id":32,"label":"ternary operation ?","shape":"star"},{"id":33,"label":"binary operation &&","shape":"triangle"},{"id":34,"label":"binary operation %","shape":"triangle"},{"id":35,"label":"identifier i","shape":"box"},{"id":36,"label":"numeric literal 3","shape":"ellipse"},{"id":37,"label":"binary operation %","shape":"triangle"},{"id":38,"label":"identifier i","shape":"box"},{"id":39,"label":"numeric literal 5","shape":"ellipse"},{"id":40,"label":"unary operation output","shape":"diamond"},{"id":41,"label":"identifier i","shape":"box"},{"id":42,"label":"numeric literal 0","shape":"ellipse"}]')
+            const edges = JSON.parse('[{"from":0,"to":1},{"from":1,"to":2},{"from":1,"to":3},{"from":0,"to":4},{"from":4,"to":5},{"from":5,"to":6},{"from":6,"to":7},{"from":6,"to":8},{"from":8,"to":9},{"from":8,"to":10},{"from":5,"to":11},{"from":11,"to":12},{"from":11,"to":13},{"from":4,"to":14},{"from":14,"to":15},{"from":15,"to":16},{"from":16,"to":17},{"from":16,"to":18},{"from":14,"to":19},{"from":19,"to":20},{"from":14,"to":21},{"from":21,"to":22},{"from":21,"to":23},{"from":23,"to":24},{"from":24,"to":25},{"from":25,"to":26},{"from":25,"to":27},{"from":23,"to":28},{"from":28,"to":29},{"from":23,"to":30},{"from":30,"to":31},{"from":30,"to":32},{"from":32,"to":33},{"from":33,"to":34},{"from":34,"to":35},{"from":34,"to":36},{"from":33,"to":37},{"from":37,"to":38},{"from":37,"to":39},{"from":32,"to":40},{"from":40,"to":41},{"from":32,"to":42}]')
+
+            const container = document.getElementById("network");
+            const data = { nodes, edges };
+            const options = {
+                interaction: { hover: true },
+                layout: {
+                    hierarchical: {
+                        direction: "UD",
+                        sortMethod: "directed",
+                    },
+                },
+                physics: {
+                    hierarchicalRepulsion: {
+                        centralGravity: 0.0,
+                        springLength: 30,
+                        springConstant: 0.008,
+                        nodeDistance: 130,
+                        damping: 0.09,
+                    },
+                }
+            };
+
+            const network = new vis.Network(container, data, options);
+        </script>
+    </body>
+</html>
