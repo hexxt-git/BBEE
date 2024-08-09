@@ -2,17 +2,25 @@ import { TokenKind, type Token } from "./lexer";
 
 export enum ExpressionKind {
     NumericLiteral,
+    StringLiteral,
     Identifier,
     UnaryOperation,
     BinaryOperation,
     Macro,
     TernaryOperation,
     Block,
+    Closure,
+    Declaration,
 }
 
 export interface NumericLiteralExpression {
     kind: ExpressionKind.NumericLiteral;
     value: number;
+}
+
+export interface StringLiteralExpression {
+    kind: ExpressionKind.StringLiteral;
+    content: string;
 }
 
 export interface IdentifierExpression {
@@ -53,14 +61,28 @@ export interface BlockExpression {
     content: Expression;
 }
 
+export interface ClosureExpression {
+    kind: ExpressionKind.Closure;
+    content: Expression;
+}
+export interface DeclarationExpression {
+    kind: ExpressionKind.Declaration;
+    operation: string;
+    identifier: string;
+    content: Expression;
+}
+
 export type Expression =
     | NumericLiteralExpression
+    | StringLiteralExpression
     | IdentifierExpression
     | UnaryExpression
     | BinaryExpression
     | TernaryExpression
     | MacroExpression
-    | BlockExpression;
+    | BlockExpression
+    | ClosureExpression
+    | DeclarationExpression;
 
 // for binary ops only
 
@@ -77,8 +99,10 @@ export const PRECEDENCE: TokenKind[] = [
     TokenKind.logical,
     // unary
     // numeric
+    // string
     // identifiers
     // Macro
+    // closures
     // parentheses
 ];
 
@@ -121,11 +145,11 @@ export class Parser {
     }
 
     private parseAssignmentOperation(): Expression {
-        let left = this.parseBlocks();
+        let left = this.parseBlock();
 
         while (this.top() && this.top().kind == TokenKind.assignment) {
             const operator: string = this.pop().value;
-            const right: Expression = this.parseBlocks();
+            const right: Expression = this.parseBlock();
 
             const expression: BinaryExpression = {
                 kind: ExpressionKind.BinaryOperation,
@@ -140,17 +164,38 @@ export class Parser {
         return left;
     }
 
-    private parseBlocks(): Expression {
-        if (this.top().kind != TokenKind.block) return this.parseTernaryOperation();
-        if (this.rem() < 2) throw new Error("Expected 2 Expressions after for");
+    private parseBlock(): Expression {
+        if (this.top().kind != TokenKind.block) return this.parseDeclaration();
+        if (this.rem() < 2) throw new Error("Expected 2 more tokens");
 
         const operation = this.pop().value;
-        const condition = this.parseToken();
-        const content = this.parseToken();
+        const condition = this.parseDeclaration();
+        const content = this.parseDeclaration();
+        if (content.kind !== ExpressionKind.Closure) throw new Error("Expected closure");
+
         const expression: BlockExpression = {
             kind: ExpressionKind.Block,
             operation,
             condition,
+            content,
+        };
+        return expression;
+    }
+
+    private parseDeclaration(): Expression {
+        if (this.top().kind != TokenKind.declaration) return this.parseTernaryOperation();
+        if (this.rem() < 2) throw new Error("Expected 2 more tokens");
+
+        const operation = this.pop().value;
+        const identifier = this.pop().value;
+        const equalSign = this.pop().value;
+        if (equalSign !== "=") throw new Error('Expected "=" Token');
+        const content = this.parseTernaryOperation();
+
+        const expression: DeclarationExpression = {
+            kind: ExpressionKind.Declaration,
+            operation,
+            identifier,
             content,
         };
         return expression;
@@ -161,11 +206,11 @@ export class Parser {
 
         while (this.top() && this.top().kind == TokenKind.ternaryOpen) {
             const operator: string = this.pop().value;
-            const success: Expression = this.parseToken();
+            const success: Expression = this.parseBinaryOperation();
             const otherwise: Token = this.pop();
             if (otherwise.kind !== TokenKind.ternaryContinue)
                 throw new Error("expected : after ternary expression");
-            const failure: Expression = this.parseToken();
+            const failure: Expression = this.parseBinaryOperation();
 
             const expression: TernaryExpression = {
                 kind: ExpressionKind.TernaryOperation,
@@ -217,11 +262,21 @@ export class Parser {
     }
 
     private parseNumericLiteral(): Expression {
-        if (this.top().kind !== TokenKind.numericLiteral) return this.parseIdentifier();
+        if (this.top().kind !== TokenKind.numericLiteral) return this.parseStringLiteral();
         const expression: NumericLiteralExpression = {
             kind: ExpressionKind.NumericLiteral,
             value: parseFloat(this.pop().value),
         };
+        return expression;
+    }
+
+    private parseStringLiteral(): Expression {
+        if (this.top().kind !== TokenKind.stringLiteral) return this.parseIdentifier();
+        const expression: StringLiteralExpression = {
+            kind: ExpressionKind.StringLiteral,
+            content: this.pop().value.slice(1, -1).replaceAll("\\n", "\n"),
+        };
+
         return expression;
     }
 
@@ -235,11 +290,26 @@ export class Parser {
     }
 
     private parseMacro(): Expression {
-        if (this.top().kind !== TokenKind.macro) return this.parsePar();
+        if (this.top().kind !== TokenKind.macro) return this.parseClosure();
         const expression: MacroExpression = {
             kind: ExpressionKind.Macro,
             identifier: this.pop().value,
         };
+        return expression;
+    }
+
+    private parseClosure(): Expression {
+        if (this.top().kind !== TokenKind.openClosure) return this.parsePar();
+
+        this.pop();
+
+        const content = this.parseToken();
+        const expression: Expression = { kind: ExpressionKind.Closure, content };
+
+        const closing = this.pop();
+        if (closing.kind !== TokenKind.closeClosure)
+            throw new Error("Expected closing closure token, got: " + JSON.stringify(closing));
+
         return expression;
     }
 

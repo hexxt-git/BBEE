@@ -1,7 +1,8 @@
-i = 0,
+mut i = 0,
 
-for (i = i + 1, i < 30) {
-    !(i % 3) ? {output 3333} : 0,
-    !(i % 5) ? {output 5555}: 0,
-    (i % 3 && i % 5) ? {output i} : 0
+for (i = i + 1, i < 31) {
+    if (i % 3 == 0) {output "fizz"},
+    if (i % 5 == 0) {output "buzz"},
+    if (i % 3 && i % 5) {output i},
+    output "\n"
 }

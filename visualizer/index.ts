@@ -49,7 +49,7 @@ export default function visualize(ast: Expression) {
 
     function flattenAST(expression: Expression, parentID: number | null = null) {
         const id = id_counter++;
-        let label = expression_labels[expression.kind] + ' ';
+        let label = expression_labels[expression.kind] + " ";
 
         const shape = getNodeShape(expression.kind);
 

@@ -28,11 +28,10 @@ export default function repl(verbose: boolean = false) {
 
         try {
             const token_arr = tokenize(input);
+            if (verbose) console.dir(token_arr, { depth: 10 });
+            
             const ast = parse(token_arr);
-            if (verbose) {
-                console.dir(token_arr, { depth: 10 });
-                console.dir(ast, { depth: 10 });
-            }
+            if (verbose) console.dir(ast, { depth: 10 });
 
             const output = interpret(ast);
             console.log(output);

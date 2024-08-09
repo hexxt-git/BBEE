@@ -1,7 +1,9 @@
 export enum TokenKind {
     identifier,
     numericLiteral,
+    stringLiteral,
     macro,
+    declaration,
 
     unary,
 
@@ -21,6 +23,9 @@ export enum TokenKind {
 
     openPar,
     closePar,
+
+    openClosure,
+    closeClosure,
 }
 
 export interface Token {
@@ -33,6 +38,8 @@ const RESERVED: Record<string, Token> = {
     input: { kind: TokenKind.macro, value: "input" },
     for: { kind: TokenKind.block, value: "for" },
     if: { kind: TokenKind.block, value: "if" },
+    mut: { kind: TokenKind.declaration, value: "mut" },
+    const: { kind: TokenKind.declaration, value: "const" },
 };
 
 type TokenRegex = { kind: TokenKind; regex: RegExp };
@@ -40,7 +47,7 @@ type TokenRegex = { kind: TokenKind; regex: RegExp };
 const TokenMap: Array<TokenRegex> = [
     {
         kind: TokenKind.unary,
-        regex: /^((!)|(floor)|(round)|(output))/,
+        regex: /^((!)|(floor)|(round)|(output)|(stringify))/,
     },
     {
         kind: TokenKind.additive,
@@ -72,7 +79,7 @@ const TokenMap: Array<TokenRegex> = [
     },
     {
         kind: TokenKind.comma,
-        regex: /^[,.]/,
+        regex: /^[,;]/,
     },
     {
         kind: TokenKind.ternaryOpen,
@@ -84,15 +91,27 @@ const TokenMap: Array<TokenRegex> = [
     },
     {
         kind: TokenKind.openPar,
-        regex: /^[({]/,
+        regex: /^\(/,
     },
     {
         kind: TokenKind.closePar,
-        regex: /^[)}]/,
+        regex: /^\)/,
+    },
+    {
+        kind: TokenKind.openClosure,
+        regex: /^\{/,
+    },
+    {
+        kind: TokenKind.closeClosure,
+        regex: /^\}/,
     },
     {
         kind: TokenKind.numericLiteral,
-        regex: /^[\d.]+/,
+        regex: /^((\d+(\.\d+)?)|(Infinity)|(NaN))/,
+    },
+    {
+        kind: TokenKind.stringLiteral,
+        regex: /^"[^"]+"/,
     },
     {
         kind: TokenKind.identifier,
@@ -129,9 +148,7 @@ export default function tokenize(source: string): Token[] {
             index += spaces;
             if (spaces === 0)
                 throw new Error(
-                    "Unexpected character encountered: " +
-                        source.slice(index, index + 10) +
-                        "..."
+                    "Unexpected character encountered: " + source.slice(index, index + 10) + "..."
                 );
         }
     }

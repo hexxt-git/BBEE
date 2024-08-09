@@ -48,8 +48,12 @@ program
         console.log(output);
     });
 
-program.option("-v, --verbose", "Enable verbose mode for REPL").action((options) => {
-    repl(options.verbose);
-});
+program
+    .command("interactive")
+    .description("launch the interpreter in repl mode")
+    .option("-v, --verbose", "Enable verbose mode for REPL")
+    .action((options) => {
+        repl(options.verbose);
+    });
 
 program.parse(process.argv);

@@ -1,9 +1,14 @@
-iterations = input,
-powerOfTwo = 1,
+const iterations = input,
+mut powerOfTwo = 1,
 
-for iterations > 0 {
-    iterations = iterations - 1,
+mut i = 0,
+for (i = i + 1, i <= iterations) {
     powerOfTwo = powerOfTwo * 2
-}
+},
 
-powerOfTwo
+output "two to the power of ",
+output iterations,
+output " is: ",
+output powerOfTwo,
+output "\nor just: ",
+2 ^ iterations
