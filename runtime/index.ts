@@ -52,8 +52,9 @@ program
     .command("interactive")
     .description("launch the interpreter in repl mode")
     .option("-v, --verbose", "Enable verbose mode for REPL")
+    .option("-d, --discard", "Discard memory between inputs")
     .action((options) => {
-        repl(options.verbose);
+        repl(options.verbose, options.discard);
     });
 
 program.parse(process.argv);

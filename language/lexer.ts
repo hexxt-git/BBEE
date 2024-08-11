@@ -111,7 +111,7 @@ const TokenMap: Array<TokenRegex> = [
     },
     {
         kind: TokenKind.stringLiteral,
-        regex: /^"[^"]+"/,
+        regex: /^"[^"]*"/,
     },
     {
         kind: TokenKind.identifier,

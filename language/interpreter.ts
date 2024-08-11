@@ -1,14 +1,14 @@
 import { ExpressionKind, type Expression } from "./parser";
 
-type Value = number | string;
-type Variable = { value: Value; mutable: Boolean }; // variable[] | functionExpression
+type Value = number | string; // | variable[] | functionExpression
+type Variable = { value: Value; mutable: Boolean };
 type identifier = string;
-interface MemoryBlock {
+export interface MemoryBlock {
     values: Record<identifier, Variable>;
     parent: MemoryBlock | null;
 }
 
-function isTrue(value: any) {
+function isTrue(value: Value) {
     return !!value;
 }
 
@@ -255,6 +255,6 @@ export default function interpret(
             };
             return interpret(expression.content, childMemory);
         default:
-            throw new Error("Unknown expression kind"); // Or handle other cases appropriately
+            throw new Error("Unknown expression kind");
     }
 }
