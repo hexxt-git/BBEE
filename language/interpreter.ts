@@ -193,12 +193,11 @@ export default function interpret(
         }
 
         case ExpressionKind.TernaryOperation:
-            // ternary to make a ternary lol
             return isTrue(interpretHere(expression.condition))
                 ? interpretHere(expression.success)
                 : interpretHere(expression.failure);
 
-        case ExpressionKind.Block:
+        case ExpressionKind.Loop:
             switch (expression.operation) {
                 case "for": {
                     let final: Value = 0;
@@ -207,17 +206,18 @@ export default function interpret(
                     }
                     return final;
                 }
-                case "if": {
-                    let final: Value = 0;
-                    if (interpretHere(expression.condition)) {
-                        final = interpretHere(expression.content);
-                    }
-                    return final;
-                }
                 default: {
                     throw new Error("Unknown Block Operation:" + expression.operation);
                 }
             }
+        
+        case ExpressionKind.Conditional:
+            if (interpretHere(expression.condition)) {
+                return interpretHere(expression.success);
+            } else if (expression.failure) {
+                return interpretHere(expression.failure);
+            }
+            return NaN;
 
         case ExpressionKind.StringLiteral:
             return expression.content;

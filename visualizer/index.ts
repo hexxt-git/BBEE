@@ -35,7 +35,8 @@ function getNodeShape(expressionKind: ExpressionKind): string {
             return "triangle";
         case ExpressionKind.TernaryOperation:
             return "star";
-        case ExpressionKind.Block:
+        case ExpressionKind.Conditional:
+        case ExpressionKind.Loop:
             return "hexagon";
         default:
             return "box";
@@ -70,8 +71,11 @@ export default function visualize(ast: Expression) {
             case ExpressionKind.TernaryOperation:
                 label += `${expression.operator}`;
                 break;
-            case ExpressionKind.Block:
+            case ExpressionKind.Loop:
                 label += `${expression.operation}`;
+                break;
+            case ExpressionKind.Conditional:
+                label += `if`;
                 break;
         }
 
@@ -94,9 +98,14 @@ export default function visualize(ast: Expression) {
                 flattenAST(expression.success, id);
                 flattenAST(expression.failure, id);
                 break;
-            case ExpressionKind.Block:
+            case ExpressionKind.Loop:
                 flattenAST(expression.condition, id);
                 flattenAST(expression.content, id);
+                break;
+            case ExpressionKind.Conditional:
+                flattenAST(expression.condition, id);
+                flattenAST(expression.success, id);
+                expression.failure && flattenAST(expression.failure, id);
                 break;
         }
     }

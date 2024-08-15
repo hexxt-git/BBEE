@@ -16,7 +16,9 @@ export enum TokenKind {
 
     ternaryOpen,
     ternaryContinue,
-    block,
+    loop,
+    if,
+    else,
 
     assignment,
     comma,
@@ -36,8 +38,9 @@ export interface Token {
 const RESERVED: Record<string, Token> = {
     random: { kind: TokenKind.macro, value: "random" },
     input: { kind: TokenKind.macro, value: "input" },
-    for: { kind: TokenKind.block, value: "for" },
-    if: { kind: TokenKind.block, value: "if" },
+    for: { kind: TokenKind.loop, value: "for" },
+    if: { kind: TokenKind.if, value: "if" },
+    else: { kind: TokenKind.else, value: "else" },
     mut: { kind: TokenKind.declaration, value: "mut" },
     const: { kind: TokenKind.declaration, value: "const" },
 };

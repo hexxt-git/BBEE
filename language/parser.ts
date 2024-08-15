@@ -8,7 +8,8 @@ export enum ExpressionKind {
     BinaryOperation,
     Macro,
     TernaryOperation,
-    Block,
+    Loop,
+    Conditional,
     Closure,
     Declaration,
 }
@@ -54,11 +55,18 @@ export interface TernaryExpression {
     failure: Expression;
 }
 
-export interface BlockExpression {
-    kind: ExpressionKind.Block;
+export interface LoopExpression {
+    kind: ExpressionKind.Loop;
     operation: string;
     condition: Expression;
     content: Expression;
+}
+
+export interface ConditionalExpression {
+    kind: ExpressionKind.Conditional;
+    condition: Expression;
+    success: Expression;
+    failure?: Expression;
 }
 
 export interface ClosureExpression {
@@ -80,7 +88,8 @@ export type Expression =
     | BinaryExpression
     | TernaryExpression
     | MacroExpression
-    | BlockExpression
+    | LoopExpression
+    | ConditionalExpression
     | ClosureExpression
     | DeclarationExpression;
 
@@ -89,7 +98,7 @@ export type Expression =
 export const PRECEDENCE: TokenKind[] = [
     // comma
     // assignment
-    // blocks
+    // Loops
     // ternary
     TokenKind.exponentiation,
     TokenKind.modulo,
@@ -145,11 +154,11 @@ export class Parser {
     }
 
     private parseAssignmentOperation(): Expression {
-        let left = this.parseBlock();
+        let left = this.parseLoop();
 
         while (this.top() && this.top().kind == TokenKind.assignment) {
             const operator: string = this.pop().value;
-            const right: Expression = this.parseBlock();
+            const right: Expression = this.parseLoop();
 
             const expression: BinaryExpression = {
                 kind: ExpressionKind.BinaryOperation,
@@ -164,20 +173,44 @@ export class Parser {
         return left;
     }
 
-    private parseBlock(): Expression {
-        if (this.top().kind != TokenKind.block) return this.parseDeclaration();
+    private parseLoop(): Expression {
+        if (this.top().kind != TokenKind.loop) return this.parseConditional();
         if (this.rem() < 2) throw new Error("Expected 2 more tokens");
 
         const operation = this.pop().value;
-        const condition = this.parseDeclaration();
-        const content = this.parseDeclaration();
+        const condition = this.parseConditional();
+        const content = this.parseConditional();
         if (content.kind !== ExpressionKind.Closure) throw new Error("Expected closure");
 
-        const expression: BlockExpression = {
-            kind: ExpressionKind.Block,
+        const expression: LoopExpression = {
+            kind: ExpressionKind.Loop,
             operation,
             condition,
             content,
+        };
+        return expression;
+    }
+    private parseConditional(): Expression {
+        if (this.top().kind != TokenKind.if) return this.parseDeclaration();
+        if (this.rem() < 2) throw new Error("Expected 2 more tokens");
+
+        this.pop(); // IF
+        const condition = this.parseDeclaration();
+        const success = this.parseDeclaration();
+        if (success.kind !== ExpressionKind.Closure) throw new Error("Expected closure");
+        const elseToken = this.top().kind == TokenKind.else;
+        let failure;
+        if (elseToken) {
+            this.pop(); // ELSE
+            failure = this.parseDeclaration();
+            if (failure.kind !== ExpressionKind.Closure) throw new Error("Expected closure");
+        }
+
+        const expression: ConditionalExpression = {
+            kind: ExpressionKind.Conditional,
+            condition,
+            success,
+            failure,
         };
         return expression;
     }
