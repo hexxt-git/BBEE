@@ -17,7 +17,7 @@ const expression_labels = Object.keys(ExpressionKind)
     .filter((key) => isNaN(Number(key)))
     .map((name) =>
         name
-            .replaceAll(/([A-Z])/g, " $1")
+            .replaceAll(/([A-Z])/g, " $1") // camel case to regular case
             .toLowerCase()
             .trim()
     );

@@ -1,6 +1,8 @@
 import { TokenKind, type Token } from "./lexer";
 
 export enum ExpressionKind {
+    FunctionDeclaration,
+    FunctionCall,
     NumericLiteral,
     StringLiteral,
     Identifier,
@@ -12,6 +14,12 @@ export enum ExpressionKind {
     Conditional,
     Closure,
     Declaration,
+}
+
+export interface FunctionDeclarationExpression {
+    kind: ExpressionKind.FunctionDeclaration;
+    inputs: string[];
+    body: Expression;
 }
 
 export interface NumericLiteralExpression {
@@ -80,7 +88,15 @@ export interface DeclarationExpression {
     content: Expression;
 }
 
+export interface FunctionCallExpression {
+    kind: ExpressionKind.FunctionCall;
+    left: Expression;
+    inputs: Expression[];
+}
+
 export type Expression =
+    | FunctionDeclarationExpression
+    | FunctionCallExpression
     | NumericLiteralExpression
     | StringLiteralExpression
     | IdentifierExpression
@@ -98,7 +114,9 @@ export type Expression =
 export const PRECEDENCE: TokenKind[] = [
     // comma
     // assignment
+    // function declarations
     // Loops
+    // Conditionals
     // ternary
     TokenKind.exponentiation,
     TokenKind.modulo,
@@ -106,6 +124,7 @@ export const PRECEDENCE: TokenKind[] = [
     TokenKind.additive,
     TokenKind.comparative,
     TokenKind.logical,
+    // function calls
     // unary
     // numeric
     // string
@@ -113,6 +132,12 @@ export const PRECEDENCE: TokenKind[] = [
     // Macro
     // closures
     // parentheses
+];
+
+export const PrimitiveTokens = [
+    TokenKind.identifier,
+    TokenKind.numericLiteral,
+    TokenKind.stringLiteral,
 ];
 
 export class Parser {
@@ -134,11 +159,11 @@ export class Parser {
     }
 
     private parseCommaOperation(): Expression {
-        let left = this.parseAssignmentOperation();
+        let left = this.parseDeclaration();
 
         while (this.top() && this.top().kind == TokenKind.comma) {
             const operator: string = this.pop().value;
-            const right: Expression = this.parseAssignmentOperation();
+            const right: Expression = this.parseDeclaration();
 
             const expression: BinaryExpression = {
                 kind: ExpressionKind.BinaryOperation,
@@ -153,12 +178,31 @@ export class Parser {
         return left;
     }
 
+    private parseDeclaration(): Expression {
+        if (this.top().kind != TokenKind.declaration) return this.parseAssignmentOperation();
+        if (this.rem() < 2) throw new Error("Expected 2 more tokens");
+
+        const operation = this.pop().value;
+        const identifier = this.pop().value;
+        const equalSign = this.pop().value;
+        if (equalSign !== "=") throw new Error('Expected "=" Token');
+        const content = this.parseAssignmentOperation();
+
+        const expression: DeclarationExpression = {
+            kind: ExpressionKind.Declaration,
+            operation,
+            identifier,
+            content,
+        };
+        return expression;
+    }
+
     private parseAssignmentOperation(): Expression {
-        let left = this.parseLoop();
+        let left = this.parseFunctionDeclaration();
 
         while (this.top() && this.top().kind == TokenKind.assignment) {
             const operator: string = this.pop().value;
-            const right: Expression = this.parseLoop();
+            const right: Expression = this.parseFunctionDeclaration();
 
             const expression: BinaryExpression = {
                 kind: ExpressionKind.BinaryOperation,
@@ -171,6 +215,56 @@ export class Parser {
         }
 
         return left;
+    }
+
+    private parseFunctionDeclaration(): Expression {
+        if (this.top() && this.top().kind != TokenKind.func) return this.parseLoop();
+        this.pop(); // FUNC
+        const inputs = this.parseFunctionInputs();
+        if (this.top().kind !== TokenKind.arrow) this.pop(); // => optional
+        this.pop(); // =>
+        let body = this.parseLoop();
+        if (body.kind !== ExpressionKind.Closure) {
+            body = {
+                kind: ExpressionKind.Closure,
+                content: body,
+            };
+        }
+        const expression: FunctionDeclarationExpression = {
+            kind: ExpressionKind.FunctionDeclaration,
+            inputs,
+            body,
+        };
+
+        return expression;
+    }
+
+    private parseFunctionInputs(): string[] {
+        if (this.top().kind !== TokenKind.openPar && this.top().kind !== TokenKind.identifier)
+            throw new Error("expected parentheses or identifier for function inputs");
+
+        if (this.top().kind === TokenKind.identifier) return [this.top().value];
+
+        this.pop(); // (
+
+        const identifiers: string[] = [];
+
+        while (this.top().kind !== TokenKind.closePar) {
+            if (this.top().kind !== TokenKind.identifier)
+                throw new Error("Expected identifiers in function inputs");
+
+            identifiers.push(this.pop().value);
+
+            if (this.top().kind !== TokenKind.comma && this.top().kind !== TokenKind.closePar)
+                throw new Error(
+                    "Expected comma operator or closing parentheses in function inputs"
+                );
+            if (this.top().kind === TokenKind.comma) this.pop(); // ,
+        }
+
+        this.pop(); // )
+
+        return identifiers;
     }
 
     private parseLoop(): Expression {
@@ -191,18 +285,18 @@ export class Parser {
         return expression;
     }
     private parseConditional(): Expression {
-        if (this.top().kind != TokenKind.if) return this.parseDeclaration();
+        if (this.top().kind != TokenKind.if) return this.parseTernaryOperation();
         if (this.rem() < 2) throw new Error("Expected 2 more tokens");
 
         this.pop(); // IF
-        const condition = this.parseDeclaration();
-        const success = this.parseDeclaration();
+        const condition = this.parseTernaryOperation();
+        const success = this.parseTernaryOperation();
         if (success.kind !== ExpressionKind.Closure) throw new Error("Expected closure");
         const elseToken = this.top().kind == TokenKind.else;
         let failure;
         if (elseToken) {
             this.pop(); // ELSE
-            failure = this.parseDeclaration();
+            failure = this.parseTernaryOperation();
             if (failure.kind !== ExpressionKind.Closure) throw new Error("Expected closure");
         }
 
@@ -211,25 +305,6 @@ export class Parser {
             condition,
             success,
             failure,
-        };
-        return expression;
-    }
-
-    private parseDeclaration(): Expression {
-        if (this.top().kind != TokenKind.declaration) return this.parseTernaryOperation();
-        if (this.rem() < 2) throw new Error("Expected 2 more tokens");
-
-        const operation = this.pop().value;
-        const identifier = this.pop().value;
-        const equalSign = this.pop().value;
-        if (equalSign !== "=") throw new Error('Expected "=" Token');
-        const content = this.parseTernaryOperation();
-
-        const expression: DeclarationExpression = {
-            kind: ExpressionKind.Declaration,
-            operation,
-            identifier,
-            content,
         };
         return expression;
     }
@@ -260,7 +335,7 @@ export class Parser {
     }
 
     private parseBinaryOperation(precedence: number = 0): Expression {
-        if (precedence >= PRECEDENCE.length) return this.parseUnaryOperation();
+        if (precedence >= PRECEDENCE.length) return this.parseFunctionCall();
         let left = this.parseBinaryOperation(precedence + 1);
 
         while (this.top() && this.top().kind == PRECEDENCE[PRECEDENCE.length - precedence - 1]) {
@@ -275,6 +350,40 @@ export class Parser {
             };
 
             left = expression;
+        }
+
+        return left;
+    }
+
+    private parseFunctionCall(): Expression {
+        let left = this.parseUnaryOperation();
+
+        while (this.top() && this.top().kind == TokenKind.call) {
+            const operator: string = this.pop().value;
+
+            if (PrimitiveTokens.includes(this.top().kind)) {
+                const right: Expression = this.parseUnaryOperation();
+
+                const expression: FunctionCallExpression = {
+                    kind: ExpressionKind.FunctionCall,
+                    left,
+                    inputs: [right],
+                };
+
+                left = expression;
+                continue;
+            }
+
+            if (this.top().kind != TokenKind.openPar)
+                throw new Error("Expected primitive or argument list for function call");
+
+            this.pop(); // (
+
+            const inputs = [];
+
+            while (this.top().kind !== TokenKind.closePar) {
+                
+            }
         }
 
         return left;

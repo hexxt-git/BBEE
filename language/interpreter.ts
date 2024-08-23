@@ -1,6 +1,11 @@
 import { ExpressionKind, type Expression } from "./parser";
 
-type Value = number | string; // | variable[] | functionExpression
+interface Function {
+    inputs: string[];
+    body: Expression;
+}
+
+type Value = number | string | Function; // | variable[] | functionExpression
 type Variable = { value: Value; mutable: Boolean };
 type identifier = string;
 export interface MemoryBlock {
@@ -34,6 +39,13 @@ export default function interpret(
     };
 
     switch (expression.kind) {
+        case ExpressionKind.FunctionDeclaration:
+            const new_fn: Function = {
+                inputs: expression.inputs,
+                body: expression.body,
+            };
+            return new_fn;
+
         case ExpressionKind.NumericLiteral:
             return expression.value;
 
@@ -164,8 +176,8 @@ export default function interpret(
                     const right = interpretHere(expression.right);
                     return !left != !right ? 1 : 0;
                 }
+
                 case "=":
-                    // i could make values immutable here or make const let keywords
                     if (expression.left.kind !== ExpressionKind.Identifier)
                         throw new Error("Assignment to non identifier or reserved keyword");
 
@@ -180,13 +192,17 @@ export default function interpret(
                     variable.value = right;
 
                     return right;
+
                 case ",":
                 case ";": {
-                    const left = interpretHere(expression.left);
+                    const _ = interpretHere(expression.left);
                     const right = interpretHere(expression.right);
                     // comma calculates left and discards it but it may create side effects like assignment
                     return right;
                 }
+                case "@":
+                    console.log(expression)
+                    return interpretHere(expression.right);
                 default:
                     throw new Error("Unknown binary operator: " + expression.operator);
             }
@@ -210,7 +226,7 @@ export default function interpret(
                     throw new Error("Unknown Block Operation:" + expression.operation);
                 }
             }
-        
+
         case ExpressionKind.Conditional:
             if (interpretHere(expression.condition)) {
                 return interpretHere(expression.success);

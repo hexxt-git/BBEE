@@ -20,6 +20,10 @@ export enum TokenKind {
     if,
     else,
 
+    func,
+    arrow,
+    call,
+
     assignment,
     comma,
 
@@ -38,6 +42,7 @@ export interface Token {
 const RESERVED: Record<string, Token> = {
     random: { kind: TokenKind.macro, value: "random" },
     input: { kind: TokenKind.macro, value: "input" },
+    func: { kind: TokenKind.func, value: "func" },
     for: { kind: TokenKind.loop, value: "for" },
     if: { kind: TokenKind.if, value: "if" },
     else: { kind: TokenKind.else, value: "else" },
@@ -55,6 +60,10 @@ const TokenMap: Array<TokenRegex> = [
     {
         kind: TokenKind.additive,
         regex: /^[+-]/,
+    },
+    {
+        kind: TokenKind.call,
+        regex: /^@/,
     },
     {
         kind: TokenKind.multiplicative,
@@ -75,6 +84,10 @@ const TokenMap: Array<TokenRegex> = [
     {
         kind: TokenKind.logical,
         regex: /^((&&)|(\|\|)|(\^\^))/,
+    },
+    {
+        kind: TokenKind.arrow,
+        regex: /^=>/,
     },
     {
         kind: TokenKind.assignment,
