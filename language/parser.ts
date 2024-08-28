@@ -113,6 +113,7 @@ export type Expression =
 
 export const PRECEDENCE: TokenKind[] = [
     // comma
+    // declaration
     // assignment
     // function declarations
     // Loops
@@ -219,6 +220,7 @@ export class Parser {
 
     private parseFunctionDeclaration(): Expression {
         if (this.top() && this.top().kind != TokenKind.func) return this.parseLoop();
+        
         this.pop(); // FUNC
         const inputs = this.parseFunctionInputs();
         if (this.top().kind !== TokenKind.arrow) this.pop(); // => optional

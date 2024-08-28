@@ -55,7 +55,7 @@ type TokenRegex = { kind: TokenKind; regex: RegExp };
 const TokenMap: Array<TokenRegex> = [
     {
         kind: TokenKind.unary,
-        regex: /^((!)|(floor)|(round)|(output)|(stringify))/,
+        regex: /^((!(?!=))|(floor)|(round)|(output)|(stringify))/,
     },
     {
         kind: TokenKind.additive,
@@ -79,7 +79,7 @@ const TokenMap: Array<TokenRegex> = [
     },
     {
         kind: TokenKind.comparative,
-        regex: /^((>=)|(<=)|(==)|>|<)/,
+        regex: /^((>=)|(<=)|(==)|(!=)|>|<)/,
     },
     {
         kind: TokenKind.logical,

@@ -1,0 +1,80 @@
+const checkPrime = func (i) => {
+    mut isPrime = 1,
+    
+    mut j = 1,
+    for (j = j + 1, j < i - 1 && isPrime) {
+        if ((i % j) == 0) {
+            isPrime = 0
+        }
+    },
+
+    isPrime
+},
+
+const nthPrime = func (n) => (
+    mut count = 0,
+    mut number = 2,
+    for (count < n) {
+        const check = checkPrime@number, 
+        if (check) {
+            count = count + 1
+        },
+        number = number + 1
+    },
+
+    number - 1
+),
+
+const nthFibonacci = func (n) => {
+    mut a = 1,
+    mut b = 1,
+
+    for (n = n - 1, n > 0) {
+        mut c = b,
+        b = a + b,
+        a = c
+    },
+
+    b
+},
+
+const nthTriangular = func (n) => {
+    n * (n + 1) / 2
+},
+
+const nthPentagonal = func (n) => {
+    n * (3 * n - 1) / 2
+},
+
+output "Welcome to my program\ntype exit to quit\n",
+
+mut user = 0,
+
+for (user != "exit") {
+    output "choose a sequence then n\n",
+    output "1 - Primes\n",
+    output "2 - Fibonacci\n",
+    output "3 - Triangular\n",
+    output "4 - Pentagonal\n",
+    user = input,
+
+    if(user == 1) {
+        output ("output:" + stringify (nthPrime@(input)))
+    } else {
+        if(user == 2) {
+            output ("output:" + stringify (nthFibonacci@(input)))
+        } else {
+            if(user == 3) {
+                output ("output:" + stringify (nthTriangular@(input)))
+            } else {
+                if(user == 4) {
+                    output ("output:" + stringify (nthPentagonal@(input)))
+                } else {
+                    output "Wrong operation"
+                }
+            }
+        }
+    },
+
+    output "\n ------------ \n"
+}

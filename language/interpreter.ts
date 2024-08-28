@@ -50,7 +50,10 @@ export default function interpret(
             const fn: Value = interpretHere(expression.left);
             if (typeof fn != "string" && typeof fn != "number") {
                 const values: Record<identifier, Variable> = {};
-                if(fn.inputs.length != expression.inputs.length) throw new Error("number of inputs to function call does not match number in declaration")
+                if (fn.inputs.length != expression.inputs.length)
+                    throw new Error(
+                        "number of inputs to function call does not match number in declaration"
+                    );
                 for (let [index, identifier] of Object.entries(fn.inputs)) {
                     values[identifier] = {
                         value: interpretHere(expression.inputs[Number(index)]),
@@ -180,6 +183,11 @@ export default function interpret(
                     const right = interpretHere(expression.right);
                     return left === right ? 1 : 0;
                 }
+                case "!=": {
+                    const left = interpretHere(expression.left);
+                    const right = interpretHere(expression.right);
+                    return left !== right ? 1 : 0;
+                }
                 case "&&": {
                     const left = interpretHere(expression.left);
                     const right = interpretHere(expression.right);
@@ -273,9 +281,10 @@ export default function interpret(
                     return Math.random();
                 case "input":
                     const input = prompt("input:") ?? "";
-                    const float = parseFloat(input);
-                    if (isNaN(float)) throw new Error("Input is not a number");
-                    return float;
+
+                    if (/^[+-]?[0-9]+(\.[0-9]+)?$/.test(input)) return parseFloat(input);
+
+                    return input;
                 default:
                     throw new Error("Unknown Macro: " + expression.identifier);
             }
