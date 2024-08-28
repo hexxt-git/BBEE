@@ -46,6 +46,25 @@ export default function interpret(
             };
             return new_fn;
 
+        case ExpressionKind.FunctionCall: {
+            const fn: Value = interpretHere(expression.left);
+            if (typeof fn != "string" && typeof fn != "number") {
+                const values: Record<identifier, Variable> = {};
+                if(fn.inputs.length != expression.inputs.length) throw new Error("number of inputs to function call does not match number in declaration")
+                for (let [index, identifier] of Object.entries(fn.inputs)) {
+                    values[identifier] = {
+                        value: interpretHere(expression.inputs[Number(index)]),
+                        mutable: true,
+                    };
+                }
+                const childMemory: MemoryBlock = {
+                    parent: memory,
+                    values: values,
+                };
+                return interpret(fn.body, childMemory);
+            } else throw new Error("trying to call non callable");
+        }
+
         case ExpressionKind.NumericLiteral:
             return expression.value;
 
@@ -200,9 +219,6 @@ export default function interpret(
                     // comma calculates left and discards it but it may create side effects like assignment
                     return right;
                 }
-                case "@":
-                    console.log(expression)
-                    return interpretHere(expression.right);
                 default:
                     throw new Error("Unknown binary operator: " + expression.operator);
             }

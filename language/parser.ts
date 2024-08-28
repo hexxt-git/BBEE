@@ -359,7 +359,7 @@ export class Parser {
         let left = this.parseUnaryOperation();
 
         while (this.top() && this.top().kind == TokenKind.call) {
-            const operator: string = this.pop().value;
+            this.pop(); // @
 
             if (PrimitiveTokens.includes(this.top().kind)) {
                 const right: Expression = this.parseUnaryOperation();
@@ -379,11 +379,30 @@ export class Parser {
 
             this.pop(); // (
 
-            const inputs = [];
+            const inputs: Expression[] = [];
 
             while (this.top().kind !== TokenKind.closePar) {
-                
+                // this feels illegal
+                const input = this.parseAssignmentOperation();
+                inputs.push(input);
+
+                if (this.top().kind !== TokenKind.comma && this.top().kind !== TokenKind.closePar)
+                    throw new Error(
+                        "Expected comma operator or closing parentheses in function inputs"
+                    );
+
+                if (this.top().kind === TokenKind.comma) this.pop(); // ,
             }
+
+            this.pop(); // )
+
+            const expression: FunctionCallExpression = {
+                kind: ExpressionKind.FunctionCall,
+                left: left,
+                inputs: inputs,
+            };
+
+            left = expression;
         }
 
         return left;

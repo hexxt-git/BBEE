@@ -1,0 +1,7 @@
+const log = func (i) => {
+    output (stringify i + ", ")
+},
+
+mut i = 0,
+
+for(i = i + 1, i < 10) { log@(i) }, 0
