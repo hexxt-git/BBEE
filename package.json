@@ -1,5 +1,7 @@
 {
-  "name": "math-solver",
+  "name": "bbee",
+  "version": "1.0.0",
+  "description": "bare bones expression evaluator. a simple programming languages built from scratch",
   "module": "runtime/index.ts",
   "type": "module",
   "devDependencies": {

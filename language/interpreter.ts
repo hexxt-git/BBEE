@@ -5,7 +5,8 @@ interface Function {
     body: Expression;
 }
 
-type Value = number | string | Function; // | variable[] | functionExpression
+type Value = number | string | Function;
+
 type Variable = { value: Value; mutable: Boolean };
 type identifier = string;
 export interface MemoryBlock {

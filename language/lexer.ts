@@ -44,6 +44,7 @@ const RESERVED: Record<string, Token> = {
     input: { kind: TokenKind.macro, value: "input" },
     func: { kind: TokenKind.func, value: "func" },
     for: { kind: TokenKind.loop, value: "for" },
+    while: { kind: TokenKind.loop, value: "while" },
     if: { kind: TokenKind.if, value: "if" },
     else: { kind: TokenKind.else, value: "else" },
     mut: { kind: TokenKind.declaration, value: "mut" },
