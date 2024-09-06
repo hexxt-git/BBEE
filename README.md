@@ -110,3 +110,5 @@ the language is dynamically typed with support for advanced syntax such as funct
     ```
     myFunction@(input1, input2)
     ```
+## stdlib
+- there are some preloaded functions such as `print` `println` and `random` you can call them as normal functions but they run natively

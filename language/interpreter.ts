@@ -1,11 +1,16 @@
 import { ExpressionKind, type Expression } from "./parser";
+import stdlib from "./stdlib";
 
 interface Function {
     inputs: string[];
     body: Expression;
 }
 
-type Value = number | string | Function;
+interface NativeFunction {
+    callback: CallableFunction;
+}
+
+export type Value = number | string | Function | NativeFunction;
 
 type Variable = { value: Value; mutable: Boolean };
 type identifier = string;
@@ -18,13 +23,7 @@ function isTrue(value: Value) {
     return !!value;
 }
 
-export default function interpret(
-    expression: Expression,
-    memory: MemoryBlock = {
-        parent: null,
-        values: {},
-    }
-): Value {
+export default function interpret(expression: Expression, memory: MemoryBlock = stdlib): Value {
     const interpretHere = (expression: Expression) => interpret(expression, memory);
 
     const findVariable = (identifier: string, currentMemory: MemoryBlock = memory): Variable => {
@@ -48,25 +47,43 @@ export default function interpret(
             return new_fn;
 
         case ExpressionKind.FunctionCall: {
-            const fn: Value = interpretHere(expression.left);
-            if (typeof fn != "string" && typeof fn != "number") {
-                const values: Record<identifier, Variable> = {};
-                if (fn.inputs.length != expression.inputs.length)
+            let fn: Value = interpretHere(expression.left);
+
+            if (
+                !(
+                    typeof fn === "object" &&
+                    ((fn as NativeFunction).callback !== undefined ||
+                        (fn as Function).body !== undefined)
+                )
+            )
+                throw new Error("Trying to call non-callable value.");
+
+            if (Object.hasOwn(fn, "body")) {
+                fn = fn as Function;
+
+                const values: Record<identifier, Variable> = fn.inputs.reduce(
+                    (acc: Record<string, Variable>, input, index) => {
+                        acc[input] = {
+                            value: interpretHere(expression.inputs[index]),
+                            mutable: true,
+                        };
+                        return acc;
+                    },
+                    {}
+                );
+
+                if (fn.inputs.length !== expression.inputs.length) {
                     throw new Error(
-                        "number of inputs to function call does not match number in declaration"
+                        "Number of inputs to function call does not match declaration."
                     );
-                for (let [index, identifier] of Object.entries(fn.inputs)) {
-                    values[identifier] = {
-                        value: interpretHere(expression.inputs[Number(index)]),
-                        mutable: true,
-                    };
                 }
-                const childMemory: MemoryBlock = {
-                    parent: memory,
-                    values: values,
-                };
+
+                const childMemory: MemoryBlock = { parent: memory, values };
                 return interpret(fn.body, childMemory);
-            } else throw new Error("trying to call non callable");
+            } else {
+                const inputs = expression.inputs.map(interpretHere);
+                return (fn as NativeFunction).callback(...inputs);
+            }
         }
 
         case ExpressionKind.NumericLiteral:
@@ -79,20 +96,6 @@ export default function interpret(
                 case "!":
                 case "not":
                     return isTrue(right) ? 0 : 1;
-                case "floor":
-                    if (typeof right !== "number")
-                        throw new Error(`Cannot preform floor operation on type ${typeof right}`);
-                    return Math.floor(right);
-                case "round":
-                    if (typeof right !== "number")
-                        throw new Error(`Cannot preform round operation on type ${typeof right}`);
-                    return Math.round(right);
-                case "stringify":
-                    if (typeof right === "number") return right.toString(10);
-                    else return right;
-                case "output":
-                    process.stdout.write(right.toString());
-                    return right;
                 default:
                     throw new Error("Unknown unary operator: " + expression.operator);
             }
@@ -275,20 +278,6 @@ export default function interpret(
         case ExpressionKind.Identifier:
             const { value } = findVariable(expression.identifier);
             return value;
-
-        case ExpressionKind.Macro:
-            switch (expression.identifier) {
-                case "random":
-                    return Math.random();
-                case "input":
-                    const input = prompt("input:") ?? "";
-
-                    if (/^[+-]?[0-9]+(\.[0-9]+)?$/.test(input)) return parseFloat(input);
-
-                    return input;
-                default:
-                    throw new Error("Unknown Macro: " + expression.identifier);
-            }
 
         case ExpressionKind.Closure:
             const childMemory: MemoryBlock = {

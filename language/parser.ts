@@ -8,7 +8,6 @@ export enum ExpressionKind {
     Identifier,
     UnaryOperation,
     BinaryOperation,
-    Macro,
     TernaryOperation,
     Loop,
     Conditional,
@@ -34,11 +33,6 @@ export interface StringLiteralExpression {
 
 export interface IdentifierExpression {
     kind: ExpressionKind.Identifier;
-    identifier: string;
-}
-
-export interface MacroExpression {
-    kind: ExpressionKind.Macro;
     identifier: string;
 }
 
@@ -103,7 +97,6 @@ export type Expression =
     | UnaryExpression
     | BinaryExpression
     | TernaryExpression
-    | MacroExpression
     | LoopExpression
     | ConditionalExpression
     | ClosureExpression
@@ -130,7 +123,6 @@ export const PRECEDENCE: TokenKind[] = [
     // numeric
     // string
     // identifiers
-    // Macro
     // closures
     // parentheses
 ];
@@ -444,18 +436,9 @@ export class Parser {
     }
 
     private parseIdentifier(): Expression {
-        if (this.top().kind !== TokenKind.identifier) return this.parseMacro();
+        if (this.top().kind !== TokenKind.identifier) return this.parseClosure();
         const expression: IdentifierExpression = {
             kind: ExpressionKind.Identifier,
-            identifier: this.pop().value,
-        };
-        return expression;
-    }
-
-    private parseMacro(): Expression {
-        if (this.top().kind !== TokenKind.macro) return this.parseClosure();
-        const expression: MacroExpression = {
-            kind: ExpressionKind.Macro,
             identifier: this.pop().value,
         };
         return expression;

@@ -1,4 +1,4 @@
-const iterations = input,
+const iterations = prompt@"x =",
 mut powerOfTwo = 1,
 
 mut i = 0,
@@ -6,9 +6,9 @@ for (i = i + 1, i <= iterations) {
     powerOfTwo = powerOfTwo * 2
 },
 
-output "two to the power of ",
-output iterations,
-output " is: ",
-output powerOfTwo,
-output "\nor just: ",
+print@("two to the power of "),
+print@(iterations),
+print@(" is: "),
+println@(powerOfTwo),
+print@("or just: "),
 2 ^ iterations

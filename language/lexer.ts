@@ -2,7 +2,6 @@ export enum TokenKind {
     identifier,
     numericLiteral,
     stringLiteral,
-    macro,
     declaration,
 
     unary,
@@ -40,8 +39,6 @@ export interface Token {
 }
 
 const RESERVED: Record<string, Token> = {
-    random: { kind: TokenKind.macro, value: "random" },
-    input: { kind: TokenKind.macro, value: "input" },
     func: { kind: TokenKind.func, value: "func" },
     for: { kind: TokenKind.loop, value: "for" },
     while: { kind: TokenKind.loop, value: "while" },
@@ -56,7 +53,7 @@ type TokenRegex = { kind: TokenKind; regex: RegExp };
 const TokenMap: Array<TokenRegex> = [
     {
         kind: TokenKind.unary,
-        regex: /^((!(?!=))|(floor)|(round)|(output)|(stringify))/,
+        regex: /^((!(?!=))|(not))/,
     },
     {
         kind: TokenKind.additive,

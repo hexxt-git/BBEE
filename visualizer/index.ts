@@ -28,7 +28,6 @@ function getNodeShape(expressionKind: ExpressionKind): string {
         case ExpressionKind.NumericLiteral:
             return "ellipse";
         case ExpressionKind.Identifier:
-        case ExpressionKind.Macro:
             return "box";
         case ExpressionKind.UnaryOperation:
             return "diamond";
@@ -60,7 +59,6 @@ export default function visualize(ast: Expression) {
                 label += `${expression.value}`;
                 break;
             case ExpressionKind.Identifier:
-            case ExpressionKind.Macro:
                 label += `${expression.identifier}`;
                 break;
             case ExpressionKind.UnaryOperation:

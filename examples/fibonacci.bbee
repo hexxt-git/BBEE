@@ -6,7 +6,8 @@ for (i < 10) {
     mut c = a + b,
     a = b,
     b = c,
-    i = i + 1
+    i = i + 1,
+    println@(a)
 },
 
 const goldenRatio = b / a

@@ -46,35 +46,42 @@ const nthPentagonal = func (n) => {
     n * (3 * n - 1) / 2
 },
 
-output "Welcome to my program\ntype exit to quit\n",
+println@("Welcome to my program"),
+println@("type exit to quit"),
 
 mut user = 0,
 
 for (user != "exit") {
-    output "choose a sequence then n\n",
-    output "1 - Primes\n",
-    output "2 - Fibonacci\n",
-    output "3 - Triangular\n",
-    output "4 - Pentagonal\n",
-    user = input,
+    println@("choose a sequence: "),
+    println@("1 - Primes"),
+    println@("2 - Fibonacci"),
+    println@("3 - Triangular"),
+    println@("4 - Pentagonal"),
+    
+    print@("operation: "),
+    user = prompt@(),
+    print@("Pick a number N for the sequence: "),
+    mut n = prompt@(),
 
     if(user == 1) {
-        output ("output:" + stringify (nthPrime@(input)))
-    } else {
-        if(user == 2) {
-            output ("output:" + stringify (nthFibonacci@(input)))
-        } else {
-            if(user == 3) {
-                output ("output:" + stringify (nthTriangular@(input)))
-            } else {
-                if(user == 4) {
-                    output ("output:" + stringify (nthPentagonal@(input)))
-                } else {
-                    output "Wrong operation"
-                }
-            }
-        }
+        print@("output: "),
+        println@(nthPrime@(n))
+    },
+    if(user == 2) {
+        print@("output: "),
+        println@(nthFibonacci@(n))
+    },
+    if(user == 3) {
+        print@("output: "),
+        println@(nthTriangular@(n))
+    },
+    if(user == 4) {
+        print@("output: "),
+        println@(nthPentagonal@(n))
+    },
+    if (user != 1 && user != 2 && user != 3 && user != 4) {
+        println@("Wrong operation")
     },
 
-    output "\n ------------ \n"
+    println@("")
 }
