@@ -58,12 +58,6 @@ the language is dynamically typed with support for advanced syntax such as funct
     ```
     !a
     ```
-    ```
-    round a
-    ```
-    ```
-    stringify 81.5
-    ```
 - binary operations
     ```
     x + 5 * 3 
@@ -74,15 +68,6 @@ the language is dynamically typed with support for advanced syntax such as funct
     ```
     condition ? a : b
     ```
-- calling macros
-    - get a random number
-        ```
-        random
-        ```
-    - take user input (parsed as number if possible)
-        ```
-        input
-        ```
 ## control flow
 - if statements (else is optional)
     ```
