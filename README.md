@@ -1,6 +1,6 @@
 # Bare Bone Expression Evaluator (BBEE 🐝)
 
-an interpreted high level programming language built on typescript with 0 dependencies _(besides Cli and visualization tool)_, for educational and entertainment purposes only.
+an interpreted high level programming language built on typescript with 0 dependencies, made for educational purposes.
 
 # Installation
 
