@@ -26,6 +26,9 @@ export enum TokenKind {
     assignment,
     comma,
 
+    openList,
+    closeList,
+
     openPar,
     closePar,
 
@@ -102,6 +105,14 @@ const TokenMap: Array<TokenRegex> = [
     {
         kind: TokenKind.ternaryContinue,
         regex: /^:/,
+    },
+    {
+        kind: TokenKind.openList,
+        regex: /^\[/,
+    },
+    {
+        kind: TokenKind.closeList,
+        regex: /^\]/,
     },
     {
         kind: TokenKind.openPar,

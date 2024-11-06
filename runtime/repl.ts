@@ -8,7 +8,11 @@ let memory: MemoryBlock = {
     parent: null,
 };
 
-export default function repl(verbose: boolean = false, discard: boolean = false) {
+export default function repl(
+    verbose: boolean = false,
+    discard: boolean = false,
+    parseOnly: boolean = false
+) {
     console.log("-+= Welcome To The REPL =+-");
 
     const rl = readline.createInterface({
@@ -38,6 +42,7 @@ export default function repl(verbose: boolean = false, discard: boolean = false)
             const ast = parse(token_arr);
             if (verbose) console.dir(ast, { depth: 10 });
 
+            if (parseOnly) return;
             const output = interpret(ast, memory);
             console.log(output);
             if (verbose) console.dir(memory, { depth: 10 });

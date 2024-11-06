@@ -10,7 +10,9 @@ interface NativeFunction {
     callback: CallableFunction;
 }
 
-export type Value = number | string | Function | NativeFunction;
+type List = Value[];
+
+export type Value = number | string | List | Function | NativeFunction;
 
 type Variable = { value: Value; mutable: Boolean };
 type identifier = string;
@@ -266,6 +268,9 @@ export default function interpret(expression: Expression, memory: MemoryBlock = 
         case ExpressionKind.StringLiteral:
             return expression.content;
 
+        case ExpressionKind.List:
+            return expression.elements.map(interpretHere)
+        
         case ExpressionKind.Declaration:
             const identifier = expression.identifier;
             const content = interpretHere(expression.content);

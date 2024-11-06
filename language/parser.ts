@@ -13,6 +13,7 @@ export enum ExpressionKind {
     Conditional,
     Closure,
     Declaration,
+    List,
 }
 
 export interface FunctionDeclarationExpression {
@@ -88,6 +89,11 @@ export interface FunctionCallExpression {
     inputs: Expression[];
 }
 
+export interface ListExpression {
+    kind: ExpressionKind.List;
+    elements: Expression[];
+}
+
 export type Expression =
     | FunctionDeclarationExpression
     | FunctionCallExpression
@@ -100,10 +106,11 @@ export type Expression =
     | LoopExpression
     | ConditionalExpression
     | ClosureExpression
-    | DeclarationExpression;
+    | DeclarationExpression
+    | ListExpression;
+
 
 // for binary ops only
-
 export const PRECEDENCE: TokenKind[] = [
     // comma
     // declaration
@@ -123,6 +130,7 @@ export const PRECEDENCE: TokenKind[] = [
     // numeric
     // string
     // identifiers
+    // lists
     // closures
     // parentheses
 ];
@@ -212,7 +220,7 @@ export class Parser {
 
     private parseFunctionDeclaration(): Expression {
         if (this.top() && this.top().kind != TokenKind.func) return this.parseLoop();
-        
+
         this.pop(); // FUNC
         const inputs = this.parseFunctionInputs();
         if (this.top().kind !== TokenKind.arrow) this.pop(); // => optional
@@ -436,11 +444,36 @@ export class Parser {
     }
 
     private parseIdentifier(): Expression {
-        if (this.top().kind !== TokenKind.identifier) return this.parseClosure();
+        if (this.top().kind !== TokenKind.identifier) return this.parseList();
         const expression: IdentifierExpression = {
             kind: ExpressionKind.Identifier,
             identifier: this.pop().value,
         };
+        return expression;
+    }
+
+    private parseList(): Expression {
+        if (this.top().kind !== TokenKind.openList) return this.parseClosure();
+
+        this.pop();
+
+        const elements = [];
+        while (this.top().kind !== TokenKind.closeList) {
+            const element = this.parseDeclaration();
+            elements.push(element);
+
+            if (this.top().kind !== TokenKind.comma && this.top().kind !== TokenKind.closeList)
+                throw new Error("Expected comma or closing bracket in list declaration");
+
+            if (this.top().kind === TokenKind.comma) this.pop(); // ,
+        }
+
+        const expression: Expression = { kind: ExpressionKind.List, elements };
+
+        const closing = this.pop();
+        if (closing.kind !== TokenKind.closeList)
+            throw new Error("Expected closing closure token, got: " + JSON.stringify(closing));
+
         return expression;
     }
 

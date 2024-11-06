@@ -51,10 +51,11 @@ program
 program
     .command("interactive")
     .description("launch the interpreter in repl mode")
-    .option("-v, --verbose", "Enable verbose mode for REPL")
-    .option("-d, --discard", "Discard memory between inputs")
+    .option("-V, --verbose", "Enable verbose mode for REPL")
+    .option("-D, --discard", "Discard memory between inputs")
+    .option("-P, --parser", "Parse only and print, use verbose to print AST")
     .action((options) => {
-        repl(options.verbose, options.discard);
+        repl(options.verbose, options.discard, options.parser);
     });
 
 program.parse(process.argv);
