@@ -2,11 +2,9 @@ import readline from "readline";
 import interpret, { type MemoryBlock } from "../language/interpreter";
 import tokenize from "../language/lexer";
 import parse from "../language/parser";
+import stdlib from "../language/stdlib";
 
-let memory: MemoryBlock = {
-    values: {},
-    parent: null,
-};
+let memory: MemoryBlock = stdlib;
 
 export default function repl(
     verbose: boolean = false,
@@ -14,6 +12,7 @@ export default function repl(
     parseOnly: boolean = false
 ) {
     console.log("-+= Welcome To The REPL =+-");
+    console.log("\"Ctrl + C\" or \"exit\" to exit")
 
     const rl = readline.createInterface({
         input: process.stdin,
@@ -26,13 +25,11 @@ export default function repl(
 
     rl.on("line", (input) => {
         if (!input.trim()) {
-            1;
             rl.prompt();
             return;
         }
-        if (input === "exit") {
-            rl.close();
-            return;
+        if (input.trim() === "exit") {
+            process.exit(0)
         }
 
         try {
@@ -44,12 +41,12 @@ export default function repl(
 
             if (parseOnly) return;
             const output = interpret(ast, memory);
-            console.log(output);
+            console.dir(output, { depth: Infinity });
             if (verbose) console.dir(memory, { depth: 10 });
 
             if (discard) memory = { values: {}, parent: null };
         } catch (error) {
-            // memory = { values: {}, parent: null };
+            // memory = stdlib;
             console.error(error);
         }
 

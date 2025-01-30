@@ -109,7 +109,6 @@ export type Expression =
     | DeclarationExpression
     | ListExpression;
 
-
 // for binary ops only
 export const PRECEDENCE: TokenKind[] = [
     // comma
